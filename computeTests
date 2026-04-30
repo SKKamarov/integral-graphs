@@ -1,0 +1,79 @@
+#!/bin/bash
+if [ $# -ne 2 ]; then
+    echo "Użycie: $0 <plik_na_grafy> <plik_csv_z_czasami>"
+    exit 1
+fi
+
+INPUT_MASTER="graphSet.g6"
+ITERATIONS=5
+GRAPH_FILE="$1"
+RESULT_FILE="$2"
+
+echo "N,time" > "$RESULT_FILE"
+
+for i in $(seq 0 13); do
+    N=$((1000 * 2**i))
+    INPUT="test_${N}.g6"
+    head -n "$N" "$INPUT_MASTER" > "$INPUT"
+
+    MIN=99999.0
+    TMP_STDERR=$(mktemp)
+
+    for ((j=1; j<=ITERATIONS; j++)); do
+        if [ $i -eq 13 ] && [ $j -eq 1 ]; then
+            ./agomp 2 4 < "$INPUT" > "$GRAPH_FILE" 2> "$TMP_STDERR"
+        else
+            ./agomp 2 4 < "$INPUT" > /dev/null 2> "$TMP_STDERR"
+        fi
+
+        CZAS=$(grep -oP '[\d.]+' "$TMP_STDERR")
+        if [ -n "$CZAS" ] && (( $(echo "$CZAS < $MIN" | bc -l) )); then
+            MIN=$CZAS
+        fi
+    done
+
+    rm -f "$TMP_STDERR"
+    echo "$N,$MIN" >> "$RESULT_FILE"
+    rm -f "$INPUT"
+done
+
+
+# COMPUTE AGS
+# #!/bin/bash
+# if [ $# -ne 2 ]; then
+#     echo "Użycie: $0 <plik_na_grafy> <plik_csv_z_czasami>"
+#     exit 1
+# fi
+
+# INPUT_MASTER="graphSet.g6"
+# ITERATIONS=5
+# GRAPH_FILE="$1"
+# RESULT_FILE="$2"
+
+# echo "N,time" > "$RESULT_FILE"
+
+# for i in $(seq 0 13); do
+#     N=$((1000 * 2**i))
+#     INPUT="test_${N}.g6"
+#     head -n "$N" "$INPUT_MASTER" > "$INPUT"
+
+#     MIN=99999.0
+#     TMP_STDERR=$(mktemp)
+
+#     for ((j=1; j<=ITERATIONS; j++)); do
+#         if [ $i -eq 13 ] && [ $j -eq 1 ]; then
+#             ./ags < "$INPUT" > "$GRAPH_FILE" 2> "$TMP_STDERR"
+#         else
+#             ./ags < "$INPUT" > /dev/null 2> "$TMP_STDERR"
+#         fi
+
+#         CZAS=$(grep -oP '[\d.]+' "$TMP_STDERR")
+#         if [ -n "$CZAS" ] && (( $(echo "$CZAS < $MIN" | bc -l) )); then
+#             MIN=$CZAS
+#         fi
+#     done
+
+#     rm -f "$TMP_STDERR"
+#     echo "$N,$MIN" >> "$RESULT_FILE"
+#     rm -f "$INPUT"
+# done

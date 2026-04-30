@@ -1,0 +1,30 @@
+#!/bin/bash
+if [ $# -ne 2 ]; then
+    echo "Użycie: $0 <plik_wejsciowy> <plik_wynikowy_csv>"
+    exit 1
+fi
+
+INPUT_MASTER="$1"
+OUTPUT_FILE="$2"
+ITERATIONS=5
+
+echo "N,threads,time" > "$OUTPUT_FILE"
+
+for N in 1000 10000 100000 1000000; do
+    TEMP_INPUT="test_${N}.g6"
+    head -n "$N" "$INPUT_MASTER" > "$TEMP_INPUT"
+    for threads in $(seq 1 10); do
+        MIN=99999.0
+        TMP_STDERR=$(mktemp)
+        for ((j=1; j<=ITERATIONS; j++)); do
+            ./agomp 2 "$threads" < "$TEMP_INPUT" > /dev/null 2> "$TMP_STDERR"
+            CZAS=$(grep -oP '[\d.]+' "$TMP_STDERR")
+            if [ -n "$CZAS" ] && (( $(echo "$CZAS < $MIN" | bc -l) )); then
+                MIN=$CZAS
+            fi
+        done
+        rm -f "$TMP_STDERR"
+        echo "$N,$threads,$MIN" >> "$OUTPUT_FILE"
+    done
+    rm -f "$TEMP_INPUT"
+done
