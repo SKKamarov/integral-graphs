@@ -1,6 +1,6 @@
 # Wersje językowe / Language versions
 
-- [Angielski](README.md)
+- [English](README.md)
 - [Polski](README.pl.md)
 
 # Spójne grafy całkowite rzędu n = 16 i o ilości krawędzi k = 87
