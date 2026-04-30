@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <math.h>
 #include <omp.h>
- 
+#include <string.h>
+
 #define BUFSIZE 1024
 #define NMAX 20
- 
+
 void test(char *BUFFOR) {
     int i, j, k, k3, k4, L, L1, z;
     double eps, g, h, ma, mn, norm, s, t, u, w;
@@ -15,13 +16,13 @@ void test(char *BUFFOR) {
     double a[NMAX*(NMAX-1)/2 + NMAX + 1];
     int n;
     int bit, poz, poz2;
- 
+
     bit = 32;
     poz = 1;
     poz2 = 1;
     n = BUFFOR[0] - 63;
     a[0] = 0.0;
- 
+
     for (i = 0; i < n; i++)
         for (j = 0; j <= i; j++) {
             if (i == j) {
@@ -35,13 +36,13 @@ void test(char *BUFFOR) {
                 bit = bit >> 1;
             }
         }
- 
+
     int k1 = 1;
     int k2 = n;
     {
         i = 0;
         for (L = 1; L <= n; L++) { i += L; d[L] = a[i]; }
- 
+
         for (L = n; L >= 2; L--) {
             i--; j = i; h = a[j]; s = 0;
             for (k = L-2; k >= 1; k--) { i--; g = a[i]; s += g*g; }
@@ -84,7 +85,7 @@ void test(char *BUFFOR) {
         if (s > norm) norm = s;
         w = ma;
         eps = 7.28e-17 * norm;
- 
+
         for (k = k2; k >= k1; k--) {
             s = mn; i = k;
             do {
@@ -120,22 +121,22 @@ void test(char *BUFFOR) {
     }
     printf("%s\n", BUFFOR);
 }
- 
+
 int main(int argc, char *argv[]) {
     char BUFFOR[BUFSIZE];
-    int glen = 2;
- 
-    if (argc > 1) glen = strtol(argv[1], NULL, 10);
- 
+
     double t_start = omp_get_wtime();
- 
+
     while (fgets(BUFFOR, BUFSIZE - 1, stdin)) {
-        BUFFOR[glen] = '\0';
+        size_t len = strlen(BUFFOR);
+        if (len > 0 && BUFFOR[len-1] == '\n')
+            BUFFOR[len-1] = '\0';
+
         test(BUFFOR);
     }
- 
+
     double t_end = omp_get_wtime();
     fprintf(stderr, "Czas przetwarzania: %f s\n", t_end - t_start);
- 
+
     return EXIT_SUCCESS;
 }
